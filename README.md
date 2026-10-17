@@ -146,7 +146,7 @@ Icons: bright = ON, bright with a clock = timer running, grey = OFF.
 |---|---|---|
 | Keep awake | TESTED | `powercfg /requests` lists it under SYSTEM while ON, absent when OFF. |
 | Never turn the screen off, dimming allowed | TESTED | "Turn off display after" held at never while ON and put back; no DISPLAY request, so dimming still works. |
-| Timers + countdown | TESTED (date picker untested) | `/for 120` went OFF to the second; menu captures 2 s apart show the countdown move. |
+| Timers + countdown | TESTED | `/for 120` went OFF to the second; menu captures 2 s apart show the countdown move; "Pick until..." date and time picker tested by hand on 2026-10-17. |
 | Crash-safe restore | TESTED | Forced kills, then restart or `/restore`, read back equal to the originals. |
 | Dim when away (external monitor) | TESTED | Dimmed to the picked level after the picked time over DDC/CI; brightness back on the first input. |
 | Dim when away (laptop screen) | Untested (needs a laptop) | Code path only. |
@@ -163,7 +163,18 @@ Icons: bright = ON, bright with a clock = timer running, grey = OFF.
 
 ## Build
 
-Needs Visual Studio Build Tools (MSVC) and, for the installer, Inno Setup 6.
+To **run** Stripewake you need nothing extra: the program uses only DLLs that ship with Windows (kernel32, user32,
+gdi32, shell32, advapi32, comctl32, powrprof). No .NET, no Visual C++ runtime.
+
+To **build** it:
+
+| Tool | Needed for | Install |
+|---|---|---|
+| Visual Studio 2022 Build Tools, "Desktop development with C++" (MSVC x64 + Windows SDK) | `Stripewake.exe` | `winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"` |
+| Inno Setup 6 | the installer (skipped if absent) | `winget install JRSoftware.InnoSetup` |
+| Python 3 + Pillow | only to redraw icons and installer images in `art/` | Python from python.org, then the Pillow package from PyPI |
+
+`build.cmd` finds MSVC through vswhere, so it runs from any prompt.
 
 ```bat
 build.cmd
