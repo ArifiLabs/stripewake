@@ -10,14 +10,12 @@
 
 <p align="center"><img src="art/stripewake-banner.png" width="520" alt="A tiger facepalms at a plastic laptop lid stopper, crossed out. Stay awake without the plastic clip."></p>
 
-Windows thinks you walked away. Your three-hour model run disagrees.
-
 Stripewake keeps your PC awake, your screen on and surprise restarts on hold, from one tray icon. It is for the
 jobs that must not stop: local AI and model runs, builds, renders, long scripts, big downloads, presentations.
-No sleep halfway through. No update restart at 3 a.m. No lock screen in the middle of a demo.
+No sleep halfway through. No surprise windows update restart at 3 a.m. No lock screen in the middle of a demo.
 
 It weighs almost nothing. One 499 KB program in plain C, 1.8 MB of private memory, 0 ms of CPU while idle.
-The usual alternative, PowerToys, runs 4 processes and 140 MB of private memory to do it (measured below).
+The usual alternative, PowerToys, runs 4 processes and 140 MB of private memory (measured).
 
 It also tells you what can still lock, blank or restart your PC, and opens the exact Windows setting to fix it.
 Turn it off and every setting it touched goes back exactly as it was.
