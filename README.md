@@ -10,12 +10,29 @@
 
 <p align="center"><img src="art/stripewake-banner.png" width="520" alt="A tiger facepalms at a plastic laptop lid stopper, crossed out. Stay awake without the plastic clip."></p>
 
-Long downloads, renders, builds, model runs and presentations die when Windows decides you walked away.
-The usual fixes are a plastic clip on the lid, a mouse jiggler, or PowerToys: a 1 GB suite to get one feature.
+Windows thinks you walked away. Your three-hour model run disagrees.
 
-Stripewake is a small program in plain C that does that one job and nothing else. It starts ON at
-sign-in, sits in the tray, and keeps the PC and the screen awake until you say stop. It also tells you what
-can still lock, blank or restart your PC, and opens the exact Windows setting to fix it.
+Stripewake keeps your PC awake, your screen on and surprise restarts on hold, from one tray icon. It is for the
+jobs that must not stop: local AI and model runs, builds, renders, long scripts, big downloads, presentations.
+No sleep halfway through. No update restart at 3 a.m. No lock screen in the middle of a demo.
+
+It weighs almost nothing. One 499 KB program in plain C, 1.8 MB of private memory, 0 ms of CPU while idle.
+The usual alternative, PowerToys, runs 4 processes and 140 MB of private memory to do it (measured below).
+
+It also tells you what can still lock, blank or restart your PC, and opens the exact Windows setting to fix it.
+Turn it off and every setting it touched goes back exactly as it was.
+
+### From the tray, in one or two clicks
+
+| You want to | Stripewake does |
+|---|---|
+| Keep the PC awake | One click. Indefinitely, for 30 min to 8 h, or until a date and time you pick. |
+| Keep the screen on | Holds it on while ON. Optionally stops Windows dimming it too. |
+| Save power while you're away | **Dim when away:** after 2 to 15 minutes without input, every screen drops to 30, 50 or 70%, external monitors included. Touch the mouse and it's back. It takes over from Windows' own dim, so there is only one. |
+| Stop update restarts | Pause updates for 1 day to 5 weeks, ask before download or install, or no restarts while you're signed in. |
+| Close the laptop lid | Keep running with the lid closed, plugged in or always. |
+| Stay unlocked when your phone wanders off | Pauses Dynamic Lock while ON. |
+| Know what can still interrupt you | One window lists every trap, worst first, with a button to the exact setting. |
 
 ## Stripewake vs PowerToys
 
