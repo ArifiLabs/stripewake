@@ -8,6 +8,7 @@
 #include <shellapi.h>
 #include <commctrl.h>
 #include <powrprof.h>
+#include <appmodel.h>
 #include <intrin.h>
 #include "resource.h"
 
@@ -57,6 +58,9 @@ struct HOLD {
 };
 static HOLD H_LID, H_LOCK, H_DISP;  /* defined with the power-plan holds below */
 static BOOL g_dynOpt, g_dynHeld, g_dynTest;
+/* Store (MSIX) build: HKCU writes go to a private per-app hive and the app cannot elevate, so the Run key,
+   Dynamic Lock (HKCU Winlogon, read by Windows) and the Windows Updates changes (HKLM, admin) are off there. */
+static BOOL g_packaged;
 static BOOL g_ssOpt = TRUE, g_ssHeld;  /* "Pause screen saver while ON" (on by default) and whether it is paused now */
 static DWORD Atou(const WCHAR *s);  /* "Pause Dynamic Lock while ON" (opt-in) and whether it is paused now */
 static const WCHAR *g_dynName = L"EnableGoodbye";  /* /dyntest swaps in a test value name */
@@ -93,12 +97,20 @@ static void Stamp(ULONGLONG t, WCHAR *out)
     wsprintfW(out, L"%04u-%02u-%02u %02u:%02u", s.wYear, s.wMonth, s.wDay, s.wHour, s.wMinute);
 }
 
-/* %LOCALAPPDATA%\Stripewake\<file>; creates the folder. */
+/* %LOCALAPPDATA%\Stripewake\<file>; creates the folder. Store build: the package's own
+   %LOCALAPPDATA%\Packages\<family name>\LocalState, so it never shares restore.ini with the desktop install. */
 static BOOL AppPath(WCHAR *path, const WCHAR *file)
 {
+    WCHAR fam[PACKAGE_FAMILY_NAME_MAX_LENGTH + 1];
+    UINT32 len = PACKAGE_FAMILY_NAME_MAX_LENGTH + 1;
     DWORD n = GetEnvironmentVariableW(L"LOCALAPPDATA", path, MAX_PATH);
     if (!n || n > MAX_PATH - 40) return FALSE;
-    lstrcatW(path, L"\\Stripewake");
+    if (g_packaged) {
+        if (GetCurrentPackageFamilyName(&len, fam) || n + lstrlenW(fam) > MAX_PATH - 60) return FALSE;
+        lstrcatW(path, L"\\Packages\\");
+        lstrcatW(path, fam);
+        lstrcatW(path, L"\\LocalState");
+    } else lstrcatW(path, L"\\Stripewake");
     CreateDirectoryW(path, NULL);
     lstrcatW(path, L"\\");
     lstrcatW(path, file);
@@ -1865,7 +1877,10 @@ static void Command(UINT id)
         HoldsUpdate("screen saver setting changed");
         Tray(NIM_MODIFY);
         break;
-    case ID_LOGON: ToggleLogon(); break;
+    case ID_LOGON:  /* Store build: the manifest's startup task, switched on or off in Settings > Startup */
+        if (g_packaged) ShellExecuteW(NULL, L"open", L"ms-settings:startupapps", NULL, NULL, SW_SHOWNORMAL);
+        else ToggleLogon();
+        break;
     case ID_CHECK: CheckWindow(); break;
     case ID_P1: case ID_P3: case ID_P7: case ID_P14: case ID_P21: case ID_P28: case ID_P35:
         WuChoose(0, PAUSE_DAYS[id - ID_P1]);
@@ -1881,7 +1896,8 @@ static void ShowMenu(int x, int y)
 {
     static const WCHAR *LABELS[] = {L"30 minutes", L"1 hour", L"2 hours", L"4 hours", L"8 hours"};
     HMENU m = CreatePopupMenu(), sub = CreatePopupMenu(), lid;
-    int logon = LogonState(), i;
+    int logon = g_packaged ? 0 : LogonState(), i;
+    const UINT pkgOff = g_packaged ? MF_GRAYED : 0;  /* desktop-installer-only items */
     UINT cmd;
     WCHAR label[80], until[40] = L"", t[24], wu[40];
 
@@ -1939,9 +1955,11 @@ static void ShowMenu(int x, int y)
         AppendMenuW(lid, MF_STRING | MF_GRAYED, ID_STATUS, BATTERY_NOTICE);
         AppendMenuW(m, MF_POPUP, (UINT_PTR)lid, L"Lid closed");
     }
-    AppendMenuW(m, MF_STRING | (g_dynOpt ? MF_CHECKED : 0), ID_DYN, L"Pause Dynamic Lock while ON");
+    AppendMenuW(m, MF_STRING | (g_dynOpt ? MF_CHECKED : 0) | pkgOff, ID_DYN,
+                g_packaged ? L"Pause Dynamic Lock while ON (desktop installer version only)" : L"Pause Dynamic Lock while ON");
     AppendMenuW(m, MF_SEPARATOR, 0, NULL);
     AppendMenuW(m, MF_STRING | (logon ? MF_CHECKED : 0) | (logon == 2 ? MF_GRAYED : 0), ID_LOGON,
+                g_packaged ? L"Start at logon (Windows Settings > Startup)..." :
                 logon == 2 ? L"Start at logon (all users)" : L"Start at logon");
     {  /* Windows Updates > one state (Automatic / Paused / Ask before download / Ask before install / Off),
           then the restart choice, then what Windows reports. Every change is one Windows prompt. */
@@ -1955,7 +1973,11 @@ static void ShowMenu(int x, int y)
            each second only repaints it, so Windows never re-places the open submenu (the 19:0x jump). */
         AppendMenuW(w, MF_OWNERDRAW, ID_WU, NULL);
         AppendMenuW(w, MF_SEPARATOR, 0, NULL);
-        AppendMenuW(w, MF_STRING, ID_M0, L"Automatic (Windows default)");
+        if (g_packaged) {  /* Store apps cannot ask for admin rights: show what Windows reports, change nothing */
+            AppendMenuW(w, MF_STRING | MF_GRAYED, ID_STATUS, L"Changes need admin rights: desktop installer version only");
+            AppendMenuW(w, MF_SEPARATOR, 0, NULL);
+        }
+        AppendMenuW(w, MF_STRING | pkgOff, ID_M0, L"Automatic (Windows default)");
         for (i = 0; i < 7 && PAUSE_DAYS[i] <= max; i++) {  /* actions: each click restarts the pause from now */
             wsprintfW(label, L"%s from now", PL[i]);
             AppendMenuW(p, MF_STRING, ID_P1 + i, label);
@@ -1964,13 +1986,13 @@ static void ShowMenu(int x, int y)
             wsprintfW(wu, L"Windows allows up to %u days on this PC", max);
             AppendMenuW(p, MF_STRING | MF_GRAYED, ID_STATUS, wu);
         }
-        AppendMenuW(w, MF_POPUP, (UINT_PTR)p, paused ? L"Pause again for" : L"Pause for");
-        AppendMenuW(w, MF_STRING, ID_M1, L"Ask before download");
-        AppendMenuW(w, MF_STRING, ID_M2, L"Download, ask before install");
-        AppendMenuW(w, MF_STRING, ID_M3, L"Off (no automatic updates)");
+        AppendMenuW(w, MF_POPUP | pkgOff, (UINT_PTR)p, paused ? L"Pause again for" : L"Pause for");
+        AppendMenuW(w, MF_STRING | pkgOff, ID_M1, L"Ask before download");
+        AppendMenuW(w, MF_STRING | pkgOff, ID_M2, L"Download, ask before install");
+        AppendMenuW(w, MF_STRING | pkgOff, ID_M3, L"Off (no automatic updates)");
         if (!paused) CheckMenuRadioItem(w, ID_M0, ID_M3, ID_M0 + mode, MF_BYCOMMAND);
         AppendMenuW(w, MF_SEPARATOR, 0, NULL);
-        AppendMenuW(w, MF_STRING | (WuNoReboot() ? MF_CHECKED : 0), ID_NOREBOOT, L"No restarts while I'm signed in");
+        AppendMenuW(w, MF_STRING | (WuNoReboot() ? MF_CHECKED : 0) | pkgOff, ID_NOREBOOT, L"No restarts while I'm signed in");
         if (RestartPending(wu)) {
             AppendMenuW(w, MF_SEPARATOR, 0, NULL);
             AppendMenuW(w, MF_STRING | MF_GRAYED, ID_STATUS, wu);
@@ -2194,6 +2216,10 @@ void WinMainCRTStartup(void)
     SYSTEM_POWER_CAPABILITIES caps;
 
     g_inst = GetModuleHandleW(NULL);
+    {
+        UINT32 n = 0;
+        g_packaged = GetCurrentPackageFullName(&n, NULL) != APPMODEL_ERROR_NO_PACKAGE;
+    }
     memset(&caps, 0, sizeof caps);
     g_lidPresent = GetPwrCapabilities(&caps) && caps.LidPresent;
     arg = Switch(L"lidtest");
@@ -2207,7 +2233,7 @@ void WinMainCRTStartup(void)
     }
     /* the screen saver is always paused while ON (President 19:5x: part of being awake, not an option) */
     g_noDim = RegDw(HKEY_CURRENT_USER, L"Software\\Stripewake", L"StopDimming", 0) != 0;      /* off by default: dimming allowed */
-    g_dynOpt = RegDw(HKEY_CURRENT_USER, L"Software\\Stripewake", L"PauseDynamicLock", 1) != 0;  /* on by default */
+    g_dynOpt = !g_packaged && RegDw(HKEY_CURRENT_USER, L"Software\\Stripewake", L"PauseDynamicLock", 1) != 0;  /* on by default */
     g_awayOpt = RegDw(HKEY_CURRENT_USER, L"Software\\Stripewake", L"DimWhenAway", 0) != 0;  /* off by default */
     g_dimPct = RegDw(HKEY_CURRENT_USER, L"Software\\Stripewake", L"DimLevel", 50);
     if (g_dimPct != 30 && g_dimPct != 70) g_dimPct = 50;
@@ -2233,6 +2259,7 @@ void WinMainCRTStartup(void)
     if (Switch(L"restore")) { RestoreAll("restore requested (uninstall)"); DdcPass(FALSE); WuUndo(); ExitProcess(0); }
     CreateMutexW(NULL, TRUE, L"Local\\Stripewake.SingleInstance");
     if (GetLastError() == ERROR_ALREADY_EXISTS) ExitProcess(0);
+    if (g_packaged) Log("Store (MSIX) package: start at logon = startup task; Dynamic Lock and Windows Updates off");
     RestoreAll("recovered at start: the last run did not put the setting back");  /* crash safety */
 
     icc.dwSize = sizeof icc;
