@@ -1,0 +1,12 @@
+#define IDI_ON     101
+#define IDI_TIMER  102
+#define IDI_OFF    103
+#define IDD_UNTIL  200
+#define IDC_TIME   201
+#define IDC_DATE   202
+#define IDD_CHECK  300
+#define IDC_LIST   301
+#define IDC_HEAD   302
+#define IDC_FIX    303
+#define IDC_RECHECK 304
+#define IDC_DESC   305

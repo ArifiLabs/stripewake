@@ -1,0 +1,38 @@
+# DRAFT - not submitted. Fill the two SHA256 values from the release's SHA256SUMS.txt,
+# then split into the three winget files (wingetcreate does this) before a PR to microsoft/winget-pkgs.
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.singleton.1.6.0.schema.json
+PackageIdentifier: ArifiLabs.Stripewake
+PackageVersion: 1.0.0
+PackageLocale: en-US
+Publisher: Arifi Labs
+PackageName: Stripewake
+License: PolyForm Shield 1.0.0
+LicenseUrl: https://github.com/ArifiLabs/stripewake/blob/main/LICENSE
+PackageUrl: https://github.com/ArifiLabs/stripewake
+ShortDescription: Keep your PC awake from the tray. A 499 KB native app; a lightweight alternative to PowerToys Awake.
+Description: |-
+  Stripewake keeps Windows and the display awake from a tray icon. It is plain C with no runtime,
+  uses about 2 MB of private memory and no CPU while idle. Timers (30 min to 8 h, or until a time),
+  a live countdown on hover, dim when away, and a status check for lock and blank-screen risks.
+Tags:
+  - awake
+  - caffeine
+  - keep-awake
+  - sleep
+  - tray
+InstallerType: inno
+Installers:
+  - Architecture: x64
+    Scope: user
+    InstallerUrl: https://github.com/ArifiLabs/stripewake/releases/download/v1.0.0/Stripewake-1.0.0-setup.exe
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+    InstallerSwitches:
+      Custom: /CURRENTUSER
+  - Architecture: x64
+    Scope: machine
+    InstallerUrl: https://github.com/ArifiLabs/stripewake/releases/download/v1.0.0/Stripewake-1.0.0-setup.exe
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+    InstallerSwitches:
+      Custom: /ALLUSERS
+ManifestType: singleton
+ManifestVersion: 1.6.0

@@ -1,0 +1,60 @@
+#include <windows.h>
+#include <commctrl.h>
+#include "resource.h"
+
+IDI_ON    ICON "../art/stripewake-on.ico"
+IDI_TIMER ICON "../art/stripewake-timer.ico"
+IDI_OFF   ICON "../art/stripewake-off.ico"
+
+1 RT_MANIFEST "awake.manifest"
+
+IDD_UNTIL DIALOGEX 0, 0, 170, 62
+STYLE DS_MODALFRAME | DS_CENTER | DS_SHELLFONT | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Keep awake until"
+FONT 9, "Segoe UI"
+BEGIN
+    LTEXT          "Stay awake until this date and time:", -1, 8, 8, 154, 10
+    CONTROL        "", IDC_DATE, "SysDateTimePick32", DTS_SHORTDATECENTURYFORMAT | WS_TABSTOP, 8, 20, 90, 14
+    CONTROL        "", IDC_TIME, "SysDateTimePick32", DTS_TIMEFORMAT | DTS_UPDOWN | WS_TABSTOP, 102, 20, 60, 14
+    DEFPUSHBUTTON  "OK", IDOK, 58, 42, 50, 14
+    PUSHBUTTON     "Cancel", IDCANCEL, 112, 42, 50, 14
+END
+
+IDD_CHECK DIALOGEX 0, 0, 460, 360
+STYLE DS_CENTER | DS_SHELLFONT | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MAXIMIZEBOX
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Stripewake - what can still interrupt it"
+FONT 9, "Segoe UI"
+BEGIN
+    LTEXT          "", IDC_HEAD, 8, 8, 444, 12
+    LTEXT          "Everything that could still lock this PC, blank the screen or restart it while Stripewake is ON.", IDC_DESC, 8, 22, 444, 18
+    CONTROL        "", IDC_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 8, 44, 444, 288
+    PUSHBUTTON     "Open setting", IDC_FIX, 8, 338, 60, 14
+    PUSHBUTTON     "Check again", IDC_RECHECK, 72, 338, 60, 14
+    DEFPUSHBUTTON  "Close", IDCANCEL, 392, 338, 60, 14
+END
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 1,0,0,0
+PRODUCTVERSION 1,0,0,0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "Arifi Labs"
+            VALUE "FileDescription", "Stripewake - keep this PC awake"
+            VALUE "FileVersion", "1.0.0"
+            VALUE "InternalName", "Stripewake"
+            VALUE "LegalCopyright", "Copyright (c) 2026 Arifi Labs. PolyForm Shield License 1.0.0."
+            VALUE "OriginalFilename", "Stripewake.exe"
+            VALUE "ProductName", "Stripewake"
+            VALUE "ProductVersion", "1.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

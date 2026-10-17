@@ -1,0 +1,16 @@
+name: Idea or feedback
+description: Suggest a feature, or tell us what works and what does not.
+title: "Idea: "
+labels: ["feedback"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea or feedback
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters to you
+      description: The problem it solves, or how you use Stripewake.

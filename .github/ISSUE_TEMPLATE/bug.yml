@@ -1,0 +1,48 @@
+name: Bug report
+description: Stripewake did not keep the PC awake, crashed, or did something wrong.
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the report. One problem per issue, please.
+  - type: input
+    id: version
+    attributes:
+      label: Stripewake version
+      description: The version of the setup file you installed (for example 1.0.0).
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and build
+      description: Press Win+R, type winver, and copy the line (for example 25H2, build 26200.1234).
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw. Include the tray menu option you had on.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Turn on ...
+        2. Wait ... minutes
+        3. The screen ...
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Laptop or desktop, on battery or plugged in, other keep-awake tools running, screenshots.
